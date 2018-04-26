@@ -308,7 +308,7 @@ func (c *ServerConn) cmdDataConnFrom(offset uint64, format string, args ...inter
 	}
 
 	if offset != 0 {
-		_, _, err := c.cmd(StatusRequestFilePending, "REST %d", offset)
+		_, _, err = c.cmd(StatusRequestFilePending, "REST %d", offset)
 		if err != nil {
 			conn.Close()
 			return nil, err
@@ -503,15 +503,23 @@ func (c *ServerConn) Delete(path string) error {
 // RemoveDirRecur deletes a non-empty folder recursively using
 // RemoveDir and Delete
 func (c *ServerConn) RemoveDirRecur(path string) error {
-	err := c.ChangeDir(path)
+	var (
+		err        error
+		currentDir string
+		entries    []*Entry
+	)
+	err = c.ChangeDir(path)
 	if err != nil {
 		return err
 	}
-	currentDir, err := c.CurrentDir()
+	currentDir, err = c.CurrentDir()
 	if err != nil {
 		return err
 	}
-	entries, err := c.List(currentDir)
+	entries, err = c.List(currentDir)
+	if err != nil {
+		return err
+	}
 	for _, entry := range entries {
 		if entry.Name != ".." && entry.Name != "." {
 			if entry.Type == EntryTypeFolder {
